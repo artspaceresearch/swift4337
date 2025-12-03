@@ -15,7 +15,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/argentlabs/web3.swift", from: "1.6.1"),
-        .package(url: "https://github.com/valpackett/SwiftCBOR", from: "0.4.7")
+        .package(url: "https://github.com/valpackett/SwiftCBOR", from: "0.4.7"),
+        .package(url: "https://github.com/GigaBitcoin/secp256k1.swift", exact: "0.17.0")
     ],
     targets: [
         .target(
