@@ -30,17 +30,20 @@ public struct SponsorUserOperationResponse: Decodable{
     }
 }
 
-public protocol PaymasterClientProtocol: JSONRPCClientProtocol {    
-    func pm_sponsorUserOperation(_ userOperation: UserOperation, entryPoint: EthereumAddress) async throws -> SponsorUserOperationResponse?
+public protocol PaymasterClientProtocol: JSONRPCClientProtocol {
+    func pm_sponsorUserOperation(_ userOperation: UserOperation, entryPoint: EthereumAddress, context: [String: String]?) async throws -> SponsorUserOperationResponse?
     func pm_supportedEntryPoints()  async throws -> [EthereumAddress]
 }
 
 
 public extension PaymasterClientProtocol{
      
-    func pm_sponsorUserOperation(_ userOperation: UserOperation, entryPoint: EthereumAddress)  async throws -> SponsorUserOperationResponse? {
-        let params: [AnyEncodable] = [AnyEncodable(userOperation), AnyEncodable(entryPoint.toChecksumAddress())]
-    
+    func pm_sponsorUserOperation(_ userOperation: UserOperation, entryPoint: EthereumAddress, context: [String: String]? = nil)  async throws -> SponsorUserOperationResponse? {
+        var params: [AnyEncodable] = [AnyEncodable(userOperation), AnyEncodable(entryPoint.toChecksumAddress())]
+        if let context = context {
+            params.append(AnyEncodable(context))
+        }
+
         do {
             let data = try await  self.networkProvider.send(method: "pm_sponsorUserOperation", params: params, receive: SponsorUserOperationResponse?.self)
         

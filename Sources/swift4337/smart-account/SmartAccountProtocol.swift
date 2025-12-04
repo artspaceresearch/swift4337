@@ -42,8 +42,8 @@ public protocol SmartAccountProtocol {
     var entryPointAddress: EthereumAddress {get}
     
     // Methods already implemented by SmartAccountProtocol (see extension below)
-    func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data, delegateCall: Bool) async throws -> UserOperation
-    func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data, delegateCall: Bool) async throws -> String
+    func prepareUserOperation(to: EthereumAddress, value: BigUInt, data: Data, delegateCall: Bool, paymasterContext: [String: String]?) async throws -> UserOperation
+    func sendUserOperation(to: EthereumAddress, value: BigUInt, data: Data, delegateCall: Bool, paymasterContext: [String: String]?) async throws -> String
     func isDeployed() async throws -> Bool
     func getNonce(key: BigUInt) async throws -> BigUInt
    
@@ -79,7 +79,7 @@ extension SmartAccountProtocol {
         return code != "0x"
     }
     
-    public func prepareUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data(), delegateCall: Bool = false) async throws -> UserOperation{
+    public func prepareUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data(), delegateCall: Bool = false, paymasterContext: [String: String]? = nil) async throws -> UserOperation{
         let callData = try self.getCallData(to: to, value: value, data: data, delegateCall: delegateCall)
         let nonce = try await self.getNonce()
         
@@ -106,7 +106,7 @@ extension SmartAccountProtocol {
         userOperation.verificationGasLimit = estimation.verificationGasLimit
         userOperation.callGasLimit =  estimation.callGasLimit
         
-        if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress) {
+        if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress, context: paymasterContext) {
             userOperation.paymaster = sponsorData.paymaster
             userOperation.paymasterData = sponsorData.paymasterData
             userOperation.paymasterVerificationGasLimit = sponsorData.paymasterVerificationGasLimit
@@ -130,8 +130,8 @@ extension SmartAccountProtocol {
     }
 
     
-    public func sendUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data(), delegateCall: Bool = false) async throws -> String{
-        var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data, delegateCall: delegateCall)
+    public func sendUserOperation(to: EthereumAddress, value: BigUInt = BigUInt(0), data: Data = Data(), delegateCall: Bool = false, paymasterContext: [String: String]? = nil) async throws -> String{
+        var userOperation = try await self.prepareUserOperation(to: to, value: value, data: data, delegateCall: delegateCall, paymasterContext: paymasterContext)
         userOperation.signature = try await self.signUserOperation(userOperation).web3.hexString
         return try await self.bundler.eth_sendUserOperation(userOperation, entryPoint: self.entryPointAddress)
     }

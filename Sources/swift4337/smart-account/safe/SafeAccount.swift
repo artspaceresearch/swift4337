@@ -166,7 +166,7 @@ public struct SafeAccount: SmartAccountProtocol  {
         return userOperationHash
     }
     
-    public func sendUserOperation(_ params: [TransactionParams]) async throws -> String {
+    public func sendUserOperation(_ params: [TransactionParams], paymasterContext: [String: String]? = nil) async throws -> String {
         let pakedMultiSend = try params.map { txParam in
             MultiSendTransaction(
                 op: BigUInt(txParam.delegateCall ? 1 : 0),
@@ -180,7 +180,8 @@ public struct SafeAccount: SmartAccountProtocol  {
         let userOperationHash = try await self.sendUserOperation(
             to: EthereumAddress(safeConfig.safeMultiSendAddress),
             data: multiSendData,
-            delegateCall: true
+            delegateCall: true,
+            paymasterContext: paymasterContext
         )
         return userOperationHash
     }
