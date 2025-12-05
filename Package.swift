@@ -14,7 +14,7 @@ let package = Package(
             targets: ["swift4337"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/argentlabs/web3.swift", from: "1.6.1"),
+        .package(url: "https://github.com/artspaceresearch/web3.swift.git", .branch("master")),
         .package(url: "https://github.com/valpackett/SwiftCBOR", from: "0.4.7")
     ],
     targets: [
