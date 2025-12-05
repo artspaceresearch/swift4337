@@ -101,10 +101,13 @@ extension SmartAccountProtocol {
         userOperation.maxFeePerGas = gasFee.maxFeePerGas.web3.hexString
         userOperation.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas.web3.hexString
         
-        let estimation = try await bundler.eth_estimateUserOperationGas(userOperation, entryPoint:  self.entryPointAddress)
-        userOperation.preVerificationGas = estimation.preVerificationGas
-        userOperation.verificationGasLimit = estimation.verificationGasLimit
-        userOperation.callGasLimit =  estimation.callGasLimit
+        // ERC-20 paymaster: skip bundler estimation, paymaster returns gas limits
+        if paymasterContext == nil {
+            let estimation = try await bundler.eth_estimateUserOperationGas(userOperation, entryPoint:  self.entryPointAddress)
+            userOperation.preVerificationGas = estimation.preVerificationGas
+            userOperation.verificationGasLimit = estimation.verificationGasLimit
+            userOperation.callGasLimit =  estimation.callGasLimit
+        }
         
         if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress, context: paymasterContext) {
             userOperation.paymaster = sponsorData.paymaster
