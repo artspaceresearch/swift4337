@@ -100,13 +100,20 @@ extension SmartAccountProtocol {
         
         userOperation.maxFeePerGas = gasFee.maxFeePerGas.web3.hexString
         userOperation.maxPriorityFeePerGas = gasFee.maxPriorityFeePerGas.web3.hexString
-        
-        // ERC-20 paymaster: skip bundler estimation, paymaster returns gas limits
+
+        // Set placeholder gas limits for paymaster hash calculation
+        // These values are used by Pimlico to compute the UserOp hash for signing
+        // Works for both ERC-20 and sponsorship modes on Base Sepolia/Mainnet
+        userOperation.preVerificationGas = "0x20000"    // 131,072
+        userOperation.verificationGasLimit = "0x80000"  // 524,288
+        userOperation.callGasLimit = "0x100000"          // 1,048,576
+
+        // Sponsorship mode: get accurate gas estimates from bundler
         if paymasterContext == nil {
-            let estimation = try await bundler.eth_estimateUserOperationGas(userOperation, entryPoint:  self.entryPointAddress)
+            let estimation = try await bundler.eth_estimateUserOperationGas(userOperation, entryPoint: self.entryPointAddress)
             userOperation.preVerificationGas = estimation.preVerificationGas
             userOperation.verificationGasLimit = estimation.verificationGasLimit
-            userOperation.callGasLimit =  estimation.callGasLimit
+            userOperation.callGasLimit = estimation.callGasLimit
         }
         
         if let sponsorData = try await paymaster?.pm_sponsorUserOperation(userOperation, entryPoint: self.entryPointAddress, context: paymasterContext) {
